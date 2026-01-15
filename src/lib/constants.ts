@@ -20,7 +20,7 @@ export const ADMIN_CREDENTIALS = [
 ]
 
 
-export const RPC_ENDPOINT = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://rpc.ankr.com/solana'
+export const RPC_ENDPOINT = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://solana-rpc.publicnode.com'
 
 export const DEX_NAME = 'FOMODEX'
 export const DEX_CA = 'FOMODEX...placeholder'

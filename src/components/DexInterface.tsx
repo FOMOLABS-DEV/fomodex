@@ -15,7 +15,9 @@ import { TradingViewChart } from './TradingViewChart'
 import { ListingModal } from './ListingModal'
 import { useWallet, useConnection } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL, PublicKey, VersionedTransaction } from '@solana/web3.js'
+import { getAssociatedTokenAddressSync } from '@solana/spl-token'
+import Link from 'next/link'
 
 
 interface TokenData {
@@ -117,44 +119,99 @@ function TradingPanel({ selectedToken, solPrice, isWalletConnected, onConnectWal
   onConnectWallet: () => void
   solBalance: number
 }) {
+  const wallet = useWallet()
+  const { connection } = useConnection()
   const [side, setSide] = useState<'buy' | 'sell'>('buy')
   const [inputAmount, setInputAmount] = useState('')
   const [outputAmount, setOutputAmount] = useState('')
   const [slippage, setSlippage] = useState(1)
   const [isFetchingQuote, setIsFetchingQuote] = useState(false)
+  const [isSwapping, setIsSwapping] = useState(false)
   const [showError, setShowError] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [modalMessage, setModalMessage] = useState('')
+  const [successTxid, setSuccessTxid] = useState('')
+  const [tokenBalance, setTokenBalance] = useState(0)
+  const [error, setError] = useState('')
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const balance = isWalletConnected ? solBalance : 0
-  const tokenBalance = isWalletConnected ? 0 : 0
+
+  useEffect(() => {
+    const fetchTokenBalance = async () => {
+      if (wallet.connected && wallet.publicKey && selectedToken) {
+        try {
+          const mint = new PublicKey(selectedToken.address)
+          const ata = getAssociatedTokenAddressSync(mint, wallet.publicKey)
+          const tokenBal = await connection.getTokenAccountBalance(ata)
+          setTokenBalance(tokenBal.value.uiAmount || 0)
+        } catch (e) {
+          setTokenBalance(0)
+        }
+      } else {
+        setTokenBalance(0)
+      }
+    }
+    fetchTokenBalance()
+    const interval = setInterval(fetchTokenBalance, 15000)
+    return () => clearInterval(interval)
+  }, [wallet.connected, wallet.publicKey, selectedToken, connection])
+
+  const getQuote = async (amount: string) => {
+    if (!amount || !selectedToken || parseFloat(amount) <= 0) return null
+    
+    try {
+      const inputMint = side === 'buy' ? SOL_MINT : selectedToken.address
+      const outputMint = side === 'buy' ? selectedToken.address : SOL_MINT
+      const inputDecimals = side === 'buy' ? 9 : (selectedToken.decimals || 9)
+      const outputDecimals = side === 'buy' ? (selectedToken.decimals || 9) : 9
+      
+      const amountInLamports = Math.floor(parseFloat(amount) * (10 ** inputDecimals))
+      if (amountInLamports <= 0) return null
+
+      const params = new URLSearchParams({
+        inputMint,
+        outputMint,
+        amount: amountInLamports.toString(),
+        slippageBps: Math.floor(slippage * 100).toString(),
+      })
+
+      const quoteRes = await fetch(`https://lite-api.jup.ag/swap/v1/quote?${params}`)
+      if (!quoteRes.ok) {
+        const errorText = await quoteRes.text()
+        throw new Error(`Quote failed: ${errorText}`)
+      }
+      
+      const quote = await quoteRes.json()
+      const outAmount = parseFloat(quote.outAmount) / (10 ** outputDecimals)
+      setOutputAmount(outAmount.toFixed(6))
+      return quote
+    } catch (e: any) {
+      console.error('Quote error:', e)
+      setError(e.message)
+      setOutputAmount('')
+      return null
+    }
+  }
 
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    if (!selectedToken || !inputAmount || !solPrice) {
+    if (!selectedToken || !inputAmount || parseFloat(inputAmount) <= 0) {
       setOutputAmount('')
       setIsFetchingQuote(false)
+      setError('')
       return
     }
     timeoutRef.current = setTimeout(async () => {
       setIsFetchingQuote(true)
-      const tokenPriceInSol = selectedToken.price / solPrice
-      
-      if (side === 'buy') {
-        // Selling SOL for Token
-        const output = parseFloat(inputAmount) / tokenPriceInSol
-        setOutputAmount(output.toFixed(2))
-      } else {
-        // Selling Token for SOL
-        const output = parseFloat(inputAmount) * tokenPriceInSol
-        setOutputAmount(output.toFixed(6))
-      }
+      setError('')
+      await getQuote(inputAmount)
       setIsFetchingQuote(false)
-    }, 400)
+    }, 500)
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [inputAmount, side, selectedToken, solPrice])
+  }, [inputAmount, side, selectedToken, slippage])
 
   if (!selectedToken) return null
 
@@ -162,13 +219,80 @@ function TradingPanel({ selectedToken, solPrice, isWalletConnected, onConnectWal
   const maxInput = inputBalance * 0.99
   const handleMax = () => setInputAmount(maxInput.toFixed(side === 'buy' ? 6 : 2))
 
-  const handleSwap = () => {
+  const handleSwap = async () => {
     if (!isWalletConnected) {
       onConnectWallet()
       return
     }
-    setModalMessage('Transaction failed: Insufficient liquidity for this pair on mock network. Please try again with a smaller amount.')
-    setShowError(true)
+
+    if (!inputAmount || !wallet.publicKey || !selectedToken || isSwapping) return
+
+    setIsSwapping(true)
+    setError('')
+
+    try {
+      const inputMint = side === 'buy' ? SOL_MINT : selectedToken.address
+      const outputMint = side === 'buy' ? selectedToken.address : SOL_MINT
+      const inputDecimals = side === 'buy' ? 9 : (selectedToken.decimals || 9)
+      
+      const amountInLamports = Math.floor(parseFloat(inputAmount) * (10 ** inputDecimals))
+      if (amountInLamports <= 0) throw new Error('Invalid amount')
+
+      const params = new URLSearchParams({
+        inputMint,
+        outputMint,
+        amount: amountInLamports.toString(),
+        slippageBps: Math.floor(slippage * 100).toString(),
+      })
+
+      const quoteRes = await fetch(`https://lite-api.jup.ag/swap/v1/quote?${params}`)
+      if (!quoteRes.ok) {
+        const errorText = await quoteRes.text()
+        throw new Error(`Failed to get quote: ${errorText}`)
+      }
+      const quote = await quoteRes.json()
+
+      const swapRes = await fetch('https://lite-api.jup.ag/swap/v1/swap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quoteResponse: quote,
+          userPublicKey: wallet.publicKey.toString(),
+          wrapAndUnwrapSol: true,
+          dynamicComputeUnitLimit: true,
+          prioritizationFeeLamports: 'auto',
+        }),
+      })
+
+      if (!swapRes.ok) {
+        const errorText = await swapRes.text()
+        throw new Error(`Failed to get swap transaction: ${errorText}`)
+      }
+
+      const { swapTransaction } = await swapRes.json()
+      const swapTransactionBuf = Uint8Array.from(atob(swapTransaction), (c) => c.charCodeAt(0))
+      const transaction = VersionedTransaction.deserialize(swapTransactionBuf)
+      
+      const signedTx = await wallet.signTransaction!(transaction)
+      const txid = await connection.sendRawTransaction(signedTx.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+      })
+      
+      await connection.confirmTransaction(txid, 'confirmed')
+      
+      setInputAmount('')
+      setOutputAmount('')
+      setSuccessTxid(txid)
+      setModalMessage('Your swap was successful!')
+      setShowSuccess(true)
+    } catch (e: any) {
+      console.error('Swap error:', e)
+      setModalMessage(e.message || 'Swap failed. Please try again.')
+      setShowError(true)
+    } finally {
+      setIsSwapping(false)
+    }
   }
 
   return (
@@ -180,7 +304,15 @@ function TradingPanel({ selectedToken, solPrice, isWalletConnected, onConnectWal
         message={modalMessage}
         type="error"
       />
-      
+      <SwapModal
+        isOpen={showSuccess}
+        onClose={() => setShowSuccess(false)}
+        title="Swap Successful!"
+        message={modalMessage}
+        type="success"
+        txid={successTxid}
+      />
+        
       <div className="flex p-1 bg-[#11111a] m-3 sm:m-4 rounded-xl border border-[#1a1a2e]">
         <button
           onClick={() => { setSide('buy'); setInputAmount('') }}
@@ -302,15 +434,18 @@ function TradingPanel({ selectedToken, solPrice, isWalletConnected, onConnectWal
                 onChange={(e) => setSlippage(parseFloat(e.target.value) || 0.1)}
                 className="w-10 sm:w-12 bg-[#1a1a2e] border border-[#222233] rounded-lg px-1.5 py-0.5 sm:py-1 text-center outline-none focus:border-cyan-500 font-mono flex-shrink-0"
               />
+              </div>
             </div>
           </div>
+          {error && (
+            <div className="text-[9px] sm:text-[10px] text-red-400 px-1 truncate">{error}</div>
+          )}
         </div>
-      </div>
 
       <div className="p-3 sm:p-4 bg-[#0d0d15] border-t border-[#1a1a2e]">
         <button
           onClick={handleSwap}
-          disabled={!inputAmount || isFetchingQuote}
+          disabled={!inputAmount || isFetchingQuote || isSwapping || (isWalletConnected && parseFloat(inputAmount) > inputBalance)}
           className={cn(
             "w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg",
             side === 'buy' 
@@ -322,6 +457,11 @@ function TradingPanel({ selectedToken, solPrice, isWalletConnected, onConnectWal
             <>
               <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
               Connect Wallet
+            </>
+          ) : isSwapping ? (
+            <>
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+              Swapping...
             </>
           ) : (
             <>
@@ -558,35 +698,48 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
         <nav className="bg-[#0a0a0f] border-b border-[#1a1a2e] px-4 lg:px-6 py-3 sm:py-4">
           <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-3 lg:gap-10">
-              <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer flex-shrink-0" onClick={() => window.location.reload()}>
-                <div className="w-10 h-8 sm:w-10 sm:h-10 sm:rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-110 transition-transform">
-                  <img src="logo.png" alt="FOMODEX Logo"/>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-lg sm:text-xl font-black tracking-tighter leading-none group-hover:text-cyan-400 transition-colors">DEX</span>
-                  {/* <span className="text-[8px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-widest">Protocol</span> */}
-                </div>
-              </div>
+                    <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer flex-shrink-0" onClick={() => window.location.reload()}>
+                      <div className="h-4 sm:h-6 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <img src="logo.png" alt="FOMODEX Logo" className="h-full w-auto object-contain" />
+                      </div>
 
-              <div className="flex items-center gap-1 p-0.5 sm:p-1 bg-[#11111a] border border-[#1a1a2e] rounded-lg sm:rounded-xl">
-                <button 
-                  onClick={() => setActiveTab('spot')}
-                  className={cn(
-                    "px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold transition-all",
-                    activeTab === 'spot' ? 'bg-[#1a1a2e] text-cyan-400 shadow-inner' : 'text-gray-500 hover:text-gray-300'
-                  )}
-                >
-                  Spot
-                </button>
-                <button 
-                  onClick={() => setIsListingModalOpen(true)}
-                  className={cn(
-                    "px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold transition-all text-gray-500 hover:text-gray-300"
-                  )}
-                >
-                  Listing
-                </button>
-              </div>
+
+                  <div className="flex flex-col">
+                    <span className="text-lg sm:text-xl font-black tracking-tighter leading-none group-hover:text-cyan-400 transition-colors">DEX</span>
+                  </div>
+                </div>
+
+                  <div className="flex items-center gap-1 p-0.5 sm:p-1 bg-[#11111a] border border-[#1a1a2e] rounded-lg sm:rounded-xl">
+                    <button 
+                      onClick={() => setActiveTab('spot')}
+                      className={cn(
+                        "px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold transition-all",
+                        activeTab === 'spot' ? 'bg-[#1a1a2e] text-cyan-400 shadow-inner' : 'text-gray-500 hover:text-gray-300'
+                      )}
+                    >
+                      Spot
+                    </button>
+                    <button 
+                      onClick={() => setIsListingModalOpen(true)}
+                      className={cn(
+                        "px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold transition-all text-gray-500 hover:text-gray-300"
+                      )}
+                    >
+                      Listing
+                    </button>
+                    <Link 
+                      href="/whitepaper"
+                      className="px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold transition-all text-gray-500 hover:text-gray-300"
+                    >
+                      Docs
+                    </Link>
+                      <span
+                        className="px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold text-gray-700 opacity-40 cursor-not-allowed select-none"
+                        title="Coming Soon"
+                      >
+                        Governance
+                      </span>
+                  </div>
             </div>
 
             <div className="flex items-center gap-1.5 lg:gap-4">
@@ -918,11 +1071,11 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
 
       <footer className="mt-12 border-t border-[#1a1a2e] bg-[#0a0a0f] px-6 lg:px-10 py-12">
           <div className="max-w-[1920px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <Zap className="w-8 h-8 text-cyan-500" />
-                <span className="text-2xl font-black tracking-tighter italic">FOMODEX</span>
-              </div>
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <Zap className="w-6 h-6 text-cyan-500" />
+                  <span className="text-xl font-black tracking-tighter italic">FOMODEX</span>
+                </div>
               <p className="text-xs text-gray-600 font-bold uppercase tracking-widest leading-loose">
                 High-powered decentralized trading terminal for the Solana ecosystem.
               </p>
@@ -934,9 +1087,9 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
             <div className="space-y-6">
               <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Ecosystem</h4>
               <ul className="space-y-3 text-[10px] text-gray-600 font-black uppercase tracking-widest">
-                <li><a href="https://fomodex.gitbook.io/whitepaper" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 cursor-pointer transition-colors">Whitepaper</a></li>
+                <li><Link href="/whitepaper" className="hover:text-cyan-400 cursor-pointer transition-colors">Whitepaper</Link></li>
                 <li onClick={() => setIsListingModalOpen(true)} className="hover:text-cyan-400 cursor-pointer transition-colors">Apply Listing</li>
-                <li><a href="https://snapshot.org/#/fomodex.eth" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 cursor-pointer transition-colors">Governance</a></li>
+                  <li><span className="text-gray-700 cursor-not-allowed" title="Coming Soon">Governance (Soon)</span></li>
               </ul>
             </div>
               <div className="space-y-6">
