@@ -373,22 +373,19 @@ nextjs-portal {
   }
 }
 
-.marquee-container {
-  overflow: hidden;
-  width: 100%;
-  position: relative;
+.animate-marquee {
+  animation: marquee 25s linear infinite;
 }
 
-.marquee-content {
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0;
-  animation: marquee 20s linear infinite;
-  white-space: nowrap;
-  will-change: transform;
-}
-
-.marquee-content:hover {
+.animate-marquee:hover {
   animation-play-state: paused;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
