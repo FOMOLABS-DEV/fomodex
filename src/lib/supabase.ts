@@ -19,7 +19,7 @@ export interface ListedToken {
   description?: string | null
   created_at: string
 }
-
+ 
 export interface ListingApplication {
   id: string
   mint_address: string

@@ -1,6 +1,6 @@
 {
   "lockfileVersion": 1,
-  "workspaces": {
+  "workspaces": { 
     "": {
       "name": "nextjs-new",
       "dependencies": {

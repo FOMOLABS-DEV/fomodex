@@ -12,6 +12,7 @@ interface AdminPanelProps {
   onClose: () => void
 }
 
+
 export function AdminPanel({ isOpen, onClose }: AdminPanelProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [username, setUsername] = useState('')

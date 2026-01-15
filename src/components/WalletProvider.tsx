@@ -18,6 +18,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     ],
     []
   )
+  
 
   return (
     <ConnectionProvider endpoint={endpoint}>

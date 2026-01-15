@@ -15,9 +15,10 @@ export const DEFAULT_TOKENS = [
 export const SLIPPAGE_PRESETS = [0.1, 0.5, 1, 3, 5]
 
 export const ADMIN_CREDENTIALS = [
-  { username: 'admin', password: 'admin' },
+  { username: 'lfg_brothers', password: 'lfgbrothers2026dev' },
   { username: 'admin1', password: 'admin1' },
 ]
+
 
 export const RPC_ENDPOINT = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://rpc.ankr.com/solana'
 

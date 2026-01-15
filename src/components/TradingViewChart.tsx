@@ -10,6 +10,7 @@ interface TradingViewChartProps {
 function TradingViewChartComponent({ address, chainId = 'solana' }: TradingViewChartProps) {
   if (!address) return null
 
+
     return (
     <div className="w-full h-full relative bg-[#050508]">
       <style>{`

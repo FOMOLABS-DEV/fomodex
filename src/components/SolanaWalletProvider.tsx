@@ -21,6 +21,7 @@ export function SolanaWalletProvider({ children }: SolanaWalletProviderProps) {
     []
   )
 
+
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>

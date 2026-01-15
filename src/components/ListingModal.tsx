@@ -14,6 +14,7 @@ interface ListingModalProps {
   onClose: () => void
 }
 
+
 export function ListingModal({ isOpen, onClose }: ListingModalProps) {
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
