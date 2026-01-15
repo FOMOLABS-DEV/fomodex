@@ -363,3 +363,32 @@ nextjs-portal {
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
 }
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-container {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.marquee-content {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  animation: marquee 20s linear infinite;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.marquee-content:hover {
+  animation-play-state: paused;
+}

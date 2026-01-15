@@ -773,33 +773,40 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
           </div>
         </nav>
 
-        <div className="bg-[#050508] border-b border-[#1a1a2e] px-4 py-2 flex items-center gap-4 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest flex-shrink-0">
-            <Bell className="w-3 h-3" />
-            Trending:
-          </div>
-          {trendingTokens.map((token) => (
-            <div
-              key={token.address}
-              onClick={() => setSelectedToken(token)}
-              className="flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-lg transition-colors cursor-pointer flex-shrink-0 group"
-            >
-              {token.logoURI && <img src={token.logoURI} alt="" className="w-4 h-4 rounded-full" />}
-              <span className="text-xs font-bold text-gray-400 group-hover:text-white">${token.symbol}</span>
-              <span className={cn(
-                "text-xs font-mono",
-                token.priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'
-              )}>
-                {token.priceChange24h >= 0 ? '+' : ''}{token.priceChange24h.toFixed(2)}%
-              </span>
+<div className="bg-[#050508] border-b border-[#1a1a2e] px-4 py-2 overflow-hidden">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest flex-shrink-0">
+                  <Bell className="w-3 h-3" />
+                  Trending:
+                </div>
+                <div className="marquee-container flex-1">
+                  <div className="marquee-content">
+                    {[...trendingTokens, ...trendingTokens].map((token, idx) => (
+                      <div
+                        key={`${token.address}-${idx}`}
+                        onClick={() => setSelectedToken(token)}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 hover:bg-white/5 rounded-lg transition-colors cursor-pointer group"
+                        style={{ flexShrink: 0 }}
+                      >
+                        {token.logoURI && <img src={token.logoURI} alt="" className="w-4 h-4 rounded-full" />}
+                        <span className="text-xs font-bold text-gray-400 group-hover:text-white">${token.symbol}</span>
+                        <span className={cn(
+                          "text-xs font-mono",
+                          token.priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'
+                        )}>
+                          {token.priceChange24h >= 0 ? '+' : ''}{token.priceChange24h.toFixed(2)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
       </header>
 
-      <main className="max-w-[1920px] mx-auto p-2 sm:p-4 lg:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_340px] gap-3 sm:gap-6 lg:h-[calc(100vh-220px)] overflow-hidden">
-            <aside className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-2xl flex flex-col overflow-hidden shadow-2xl h-[300px] sm:h-[400px] lg:h-full order-2 lg:order-1">
+        <main className="max-w-[1920px] mx-auto p-2 sm:p-4 lg:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_340px] gap-3 sm:gap-6 lg:min-h-[calc(100vh-220px)]">
+            <aside className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-2xl flex flex-col overflow-hidden shadow-2xl h-[300px] sm:h-[400px] lg:h-[calc(100vh-240px)] order-2 lg:order-1">
               <div className="p-3 sm:p-4 border-b border-[#1a1a2e] space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-[10px] sm:text-xs tracking-wide text-gray-400 uppercase">Registry</h3>
@@ -866,7 +873,7 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
               </div>
             </aside>
 
-            <section className="flex flex-col gap-3 sm:gap-6 order-1 lg:order-2 overflow-y-auto lg:overflow-visible no-scrollbar">
+            <section className="flex flex-col gap-3 sm:gap-6 order-1 lg:order-2">
               <div className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-2xl p-2 sm:p-4 lg:p-6 shadow-2xl">
                 {selectedToken ? (
                   <div className="flex flex-col gap-3 sm:gap-6">
@@ -1079,10 +1086,12 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
               <p className="text-xs text-gray-600 font-bold uppercase tracking-widest leading-loose">
                 High-powered decentralized trading terminal for the Solana ecosystem.
               </p>
-              <div className="flex gap-4">
-                <svg className="w-5 h-5 text-gray-500 hover:text-cyan-400 cursor-pointer transition-all" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                <Globe className="w-5 h-5 text-gray-500 hover:text-cyan-400 cursor-pointer transition-all" />
-              </div>
+<div className="flex gap-4">
+                  <a href="https://x.com/fomo_dex" target="_blank" rel="noopener noreferrer">
+                    <svg className="w-5 h-5 text-gray-500 hover:text-cyan-400 cursor-pointer transition-all" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  </a>
+                  <Globe className="w-5 h-5 text-gray-500 hover:text-cyan-400 cursor-pointer transition-all" />
+                </div>
             </div>
             <div className="space-y-6">
               <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Ecosystem</h4>
