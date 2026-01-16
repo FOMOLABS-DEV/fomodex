@@ -9,7 +9,7 @@ import {
   ArrowUpDown, Filter, Settings, Bell, Info, Send, Globe
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { SOL_MINT, DEFAULT_TOKENS, SLIPPAGE_PRESETS, DEX_NAME, BURN_NOTICE, REWARDS_MESSAGE, METEORA_LAUNCH, DEX_CA } from '@/lib/constants'
+import { SOL_MINT, DEFAULT_TOKENS, SLIPPAGE_PRESETS, DEX_NAME, BURN_NOTICE, METEORA_LAUNCH, DEX_CA } from '@/lib/constants'
 import { getListedTokens, ListedToken } from '@/lib/supabase'
 import { TradingViewChart } from './TradingViewChart'
 import { ListingModal } from './ListingModal'
@@ -668,129 +668,97 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
   )
 
   return (
-    <div className={cn("min-h-screen bg-[#050508] text-white selection:bg-cyan-500/30", isDarkMode ? 'dark' : '')}>
+    <div className={cn("min-h-screen w-full overflow-x-hidden bg-[#050508] text-white selection:bg-cyan-500/30", isDarkMode ? 'dark' : '')}>
       <ListingModal isOpen={isListingModalOpen} onClose={() => setIsListingModalOpen(false)} />
       
-      <header className="sticky top-0 z-50">
-        <div className="bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-[#1a1a2e] px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
-            <div className="flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[9px] sm:text-[10px] font-bold text-cyan-400 uppercase tracking-widest animate-pulse flex-shrink-0">
-              <Rocket className="w-3 h-3" />
-              <span className="whitespace-nowrap">{METEORA_LAUNCH}</span>
-            </div>
-            <div className="flex items-center gap-2 text-[9px] sm:text-[10px] font-bold text-red-400 uppercase tracking-widest flex-shrink-0">
-              <Flame className="w-3 h-3" />
-              <span className="whitespace-nowrap">{BURN_NOTICE}</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between sm:justify-end gap-4 text-[9px] sm:text-[10px] text-gray-500">
-            <div className="flex items-center gap-1.5 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              Mainnet-Beta: {solPrice ? `$${solPrice.toFixed(2)}` : 'Syncing...'}
-            </div>
-            <div className="hidden md:flex items-center gap-1.5 whitespace-nowrap">
-              <Info className="w-3 h-3" />
-              {REWARDS_MESSAGE}
+<header className="sticky top-0 z-50">
+          <div className="bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-[#1a1a2e] px-2 sm:px-4 py-2 overflow-hidden">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-4 overflow-hidden min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[8px] sm:text-[10px] font-bold text-cyan-400 uppercase tracking-wider animate-pulse flex-shrink-0">
+                  <Rocket className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <span className="whitespace-nowrap truncate">{METEORA_LAUNCH}</span>
+                </div>
+                <div className="hidden xs:flex items-center gap-1.5 sm:gap-2 text-[8px] sm:text-[10px] font-bold text-red-400 uppercase tracking-wider flex-shrink-0">
+                  <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <span className="whitespace-nowrap">{BURN_NOTICE}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-[8px] sm:text-[10px] text-gray-500 flex-shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="whitespace-nowrap">{solPrice ? `$${solPrice.toFixed(2)}` : '...'}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <nav className="bg-[#0a0a0f] border-b border-[#1a1a2e] px-4 lg:px-6 py-3 sm:py-4">
-          <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-2 sm:gap-4">
-            <div className="flex items-center gap-3 lg:gap-10">
-                    <div className="flex items-center gap-2 sm:gap-3 group cursor-pointer flex-shrink-0" onClick={() => window.location.reload()}>
-                      <div className="h-4 sm:h-6 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <img src="logo.png" alt="FOMODEX Logo" className="h-full w-auto object-contain" />
-                      </div>
-
-
-                  <div className="flex flex-col">
-                    <span className="text-lg sm:text-xl font-black tracking-tighter leading-none group-hover:text-cyan-400 transition-colors">DEX</span>
+<nav className="bg-[#0a0a0f] border-b border-[#1a1a2e] px-2 sm:px-4 lg:px-6 py-2 sm:py-3 w-full">
+            <div className="max-w-[1920px] mx-auto flex items-center justify-between gap-2 w-full">
+              <div className="flex items-center gap-2 sm:gap-3 lg:gap-10 min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 group cursor-pointer flex-shrink-0" onClick={() => window.location.reload()}>
+                  <div className="h-4 sm:h-6 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <img src="logo.png" alt="FOMODEX Logo" className="h-full w-auto object-contain" />
                   </div>
+                  <span className="text-base sm:text-xl font-black tracking-tighter leading-none group-hover:text-cyan-400 transition-colors">DEX</span>
                 </div>
 
-                  <div className="flex items-center gap-1 p-0.5 sm:p-1 bg-[#11111a] border border-[#1a1a2e] rounded-lg sm:rounded-xl">
-                    <button 
-                      onClick={() => setActiveTab('spot')}
-                      className={cn(
-                        "px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold transition-all",
-                        activeTab === 'spot' ? 'bg-[#1a1a2e] text-cyan-400 shadow-inner' : 'text-gray-500 hover:text-gray-300'
-                      )}
-                    >
-                      Spot
-                    </button>
-                    <button 
-                      onClick={() => setIsListingModalOpen(true)}
-                      className={cn(
-                        "px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold transition-all text-gray-500 hover:text-gray-300"
-                      )}
-                    >
-                      Listing
-                    </button>
-                    <Link 
-                      href="/whitepaper"
-                      className="px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold transition-all text-gray-500 hover:text-gray-300"
-                    >
-                      Docs
-                    </Link>
-                      <span
-                        className="px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-[11px] sm:text-sm font-bold text-gray-700 opacity-40 cursor-not-allowed select-none"
-                        title="Coming Soon"
-                      >
-                        Governance
-                      </span>
-                  </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 lg:gap-4">
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-[#11111a] border border-[#1a1a2e] rounded-xl">
-                <Search className="w-4 h-4 text-gray-500" />
-                <input 
-                  type="text" 
-                  placeholder="Quick Search..."
-                  className="bg-transparent text-sm outline-none w-32 xl:w-48 placeholder:text-gray-600"
-                />
+                <div className="flex items-center gap-0.5 p-0.5 bg-[#11111a] border border-[#1a1a2e] rounded-lg overflow-x-auto no-scrollbar">
+                  <button 
+                    onClick={() => setActiveTab('spot')}
+                    className={cn(
+                      "px-2 sm:px-4 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap",
+                      activeTab === 'spot' ? 'bg-[#1a1a2e] text-cyan-400' : 'text-gray-500'
+                    )}
+                  >
+                    Spot
+                  </button>
+                  <button 
+                    onClick={() => setIsListingModalOpen(true)}
+                    className="px-2 sm:px-4 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-sm font-bold text-gray-500 whitespace-nowrap"
+                  >
+                    Listing
+                  </button>
+                  <Link 
+                    href="/whitepaper"
+                    className="px-2 sm:px-4 py-1 sm:py-1.5 rounded-md text-[10px] sm:text-sm font-bold text-gray-500 whitespace-nowrap"
+                  >
+                    Docs
+                  </Link>
+                  <span className="hidden sm:inline px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm font-bold text-gray-700/50 whitespace-nowrap">
+                    Governance
+                  </span>
+                </div>
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-2">
-                <button onClick={onOpenAdmin} className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-[#11111a] border border-[#1a1a2e] rounded-lg sm:rounded-xl text-gray-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-all">
-                  <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <button onClick={onOpenAdmin} className="w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center bg-[#11111a] border border-[#1a1a2e] rounded-lg text-gray-400 hover:text-cyan-400 transition-all">
+                  <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
-                <button className="hidden xs:flex w-8 h-8 sm:w-10 sm:h-10 items-center justify-center bg-[#11111a] border border-[#1a1a2e] rounded-lg sm:rounded-xl text-gray-400 hover:text-cyan-400 hover:border-cyan-500/50 transition-all">
-                  <History className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-                <div className="h-5 sm:h-6 w-px bg-[#1a1a2e] mx-0.5 sm:mx-1" />
                 <button
                   onClick={handleConnectWallet}
-                  className="flex items-center gap-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-lg sm:rounded-xl transition-all active:scale-95 shadow-lg shadow-cyan-500/10 whitespace-nowrap text-[11px] sm:text-sm"
+                  className="flex items-center gap-1.5 px-2 sm:px-4 py-1.5 sm:py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-lg transition-all text-[10px] sm:text-sm whitespace-nowrap"
                 >
                   <Wallet className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden xs:inline">{isWalletConnected ? walletAddress : 'Connect'}</span>
-                  <span className="xs:hidden">{isWalletConnected ? 'Wallet' : 'Connect'}</span>
+                  <span>{isWalletConnected ? walletAddress : 'Connect'}</span>
                 </button>
               </div>
             </div>
-          </div>
-        </nav>
+          </nav>
 
-<div className="bg-[#050508] border-b border-[#1a1a2e] px-4 py-2 overflow-hidden">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest flex-shrink-0">
-                <Bell className="w-3 h-3" />
-                <span className="hidden sm:inline">Trending:</span>
-              </div>
+<div className="bg-[#050508] border-b border-[#1a1a2e] px-2 sm:px-4 py-1.5 overflow-hidden">
+            <div className="flex items-center gap-2">
+              <Bell className="w-3 h-3 text-gray-600 flex-shrink-0" />
               <div className="flex-1 overflow-hidden">
-                <div className="flex items-center gap-4 animate-marquee whitespace-nowrap">
+                <div className="flex items-center gap-3 animate-marquee whitespace-nowrap">
                   {[...trendingTokens, ...trendingTokens].map((token, idx) => (
                     <div
                       key={`${token.address}-${idx}`}
                       onClick={() => setSelectedToken(token)}
-                      className="inline-flex items-center gap-2 px-2 py-1 hover:bg-white/5 rounded-lg transition-colors cursor-pointer group flex-shrink-0"
+                      className="inline-flex items-center gap-1.5 px-1.5 py-0.5 hover:bg-white/5 rounded transition-colors cursor-pointer group flex-shrink-0"
                     >
-                      {token.logoURI && <img src={token.logoURI} alt="" className="w-4 h-4 rounded-full" />}
-                      <span className="text-xs font-bold text-gray-400 group-hover:text-white">${token.symbol}</span>
+                      {token.logoURI && <img src={token.logoURI} alt="" className="w-3.5 h-3.5 rounded-full" />}
+                      <span className="text-[10px] font-bold text-gray-400 group-hover:text-white">${token.symbol}</span>
                       <span className={cn(
-                        "text-xs font-mono",
+                        "text-[10px] font-mono",
                         token.priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'
                       )}>
                         {token.priceChange24h >= 0 ? '+' : ''}{token.priceChange24h.toFixed(2)}%
@@ -872,49 +840,41 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
               </div>
             </aside>
 
-            <section className="flex flex-col gap-3 sm:gap-6 order-1 lg:order-2">
-              <div className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-2xl p-2 sm:p-4 lg:p-6 shadow-2xl">
-                {selectedToken ? (
-                  <div className="flex flex-col gap-3 sm:gap-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-6">
-                      <div className="flex items-center gap-2 sm:gap-4">
-                        {selectedToken.logoURI && (
-                          <img src={selectedToken.logoURI} alt="" className="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-lg sm:rounded-2xl border-2 border-cyan-500/20 shadow-lg shadow-cyan-500/10" />
-                        )}
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <h2 className="text-lg sm:text-2xl lg:text-3xl font-black tracking-tighter truncate">{selectedToken.symbol}</h2>
-                            <span className="text-[9px] sm:text-xs lg:text-sm font-bold text-gray-500 flex-shrink-0">/ SOL</span>
+<section className="flex flex-col gap-3 sm:gap-6 order-1 lg:order-2">
+                <div className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-xl sm:rounded-2xl p-2 sm:p-4 lg:p-6 shadow-2xl">
+                  {selectedToken ? (
+                    <div className="flex flex-col gap-2 sm:gap-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          {selectedToken.logoURI && (
+                            <img src={selectedToken.logoURI} alt="" className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg border border-cyan-500/20" />
+                          )}
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1">
+                              <h2 className="text-base sm:text-xl lg:text-2xl font-black tracking-tight truncate">{selectedToken.symbol}</h2>
+                              <span className="text-[8px] sm:text-xs text-gray-500">/ SOL</span>
+                            </div>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(selectedToken.address)}
+                              className="text-[7px] sm:text-[9px] text-gray-600 hover:text-cyan-400 flex items-center gap-1 font-mono"
+                            >
+                              <span>{selectedToken.address.slice(0, 4)}...{selectedToken.address.slice(-4)}</span>
+                              <Copy className="w-2 h-2" />
+                            </button>
                           </div>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(selectedToken.address)
-                            }}
-                            className="text-[8px] sm:text-[10px] lg:text-xs text-gray-600 hover:text-cyan-400 flex items-center gap-1 transition-colors font-mono truncate"
-                          >
-                            <span className="truncate">{selectedToken.address.slice(0, 4)}...{selectedToken.address.slice(-4)}</span>
-                            <Copy className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" />
-                          </button>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-4 lg:gap-8 bg-[#11111a] border border-[#1a1a2e] rounded-xl sm:rounded-2xl p-2 sm:p-4 lg:px-8 lg:py-4">
-                        <div className="min-w-0">
-                          <div className="text-[7px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest mb-0.5 sm:mb-1">Price (SOL)</div>
-                          <div className="text-sm sm:text-lg lg:text-2xl font-black font-mono text-cyan-400 tracking-tighter truncate">{(selectedToken.price / (solPrice || 1)).toFixed(6)}</div>
-                        </div>
-                        <div className="hidden sm:block w-px h-8 sm:h-10 bg-[#1a1a2e]" />
-                        <div className="min-w-0">
-                          <div className="text-[7px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest mb-0.5 sm:mb-1">24H Change</div>
+                        <div className="flex flex-col items-end bg-[#11111a] border border-[#1a1a2e] rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
+                          <div className="text-[7px] sm:text-[9px] text-gray-600 uppercase">Price (SOL)</div>
+                          <div className="text-sm sm:text-base lg:text-lg font-black font-mono text-cyan-400">{(selectedToken.price / (solPrice || 1)).toFixed(6)}</div>
                           <div className={cn(
-                            "text-sm sm:text-lg lg:text-2xl font-black font-mono tracking-tighter truncate",
+                            "text-[9px] sm:text-xs font-mono",
                             selectedToken.priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'
                           )}>
                             {selectedToken.priceChange24h >= 0 ? '+' : ''}{selectedToken.priceChange24h.toFixed(2)}%
                           </div>
                         </div>
                       </div>
-                    </div>
 
                         <div className="flex items-center gap-1 p-0.5 bg-[#050508] border border-[#1a1a2e] rounded-lg self-start">
                           <button 
@@ -937,7 +897,7 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
                           </button>
                         </div>
 
-                        <div className="h-[550px] sm:h-[500px] lg:h-[600px] w-full bg-[#050508] border border-[#1a1a2e] rounded-xl overflow-hidden relative">
+                        <div className="h-[350px] sm:h-[450px] lg:h-[550px] w-full bg-[#050508] border border-[#1a1a2e] rounded-lg sm:rounded-xl overflow-hidden relative">
                           {tokenTab === 'price' ? (
                             <TradingViewChart address={selectedToken.pairAddress || selectedToken.address} />
                           ) : (
@@ -1012,26 +972,26 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
                         </div>
                   </div>
                 ) : (
-                  <div className="h-[550px] sm:h-[500px] lg:h-[600px] flex flex-col items-center justify-center gap-4 sm:gap-6 py-10 sm:py-20">
-                    <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 text-gray-800" />
-                    <p className="text-[10px] sm:text-sm font-black text-gray-700 uppercase tracking-widest">Select Asset to view Chart</p>
-                  </div>
+<div className="h-[350px] sm:h-[450px] lg:h-[550px] flex flex-col items-center justify-center gap-3 py-10">
+                      <BarChart3 className="w-8 h-8 sm:w-10 sm:h-10 text-gray-800" />
+                      <p className="text-[9px] sm:text-xs font-bold text-gray-700 uppercase">Select Asset</p>
+                    </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {[
-                  { label: 'Network Health', value: 'OPTIMAL', color: 'text-green-400', icon: Zap },
-                  { label: 'Pool Liquidity', value: formatNumber(selectedToken?.liquidity || 0), color: 'text-cyan-400', icon: ArrowUpDown },
-                  { label: 'Market Cap', value: formatNumber((selectedToken?.price || 0) * 1000000000), color: 'text-blue-400', icon: History }
+                  { label: 'Health', value: 'OK', color: 'text-green-400', icon: Zap },
+                  { label: 'Liquidity', value: formatNumber(selectedToken?.liquidity || 0), color: 'text-cyan-400', icon: ArrowUpDown },
+                  { label: 'MCap', value: formatNumber((selectedToken?.price || 0) * 1000000000), color: 'text-blue-400', icon: History }
                 ].map((stat, i) => (
-                  <div key={i} className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-xl sm:rounded-2xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-[#11111a] flex items-center justify-center border border-[#1a1a2e] flex-shrink-0">
-                      <stat.icon className={cn("w-4 h-4 sm:w-5 sm:h-5", stat.color)} />
+                  <div key={i} className="bg-[#0a0a0f] border border-[#1a1a2e] rounded-lg sm:rounded-xl p-2 sm:p-4 flex items-center gap-2 sm:gap-3">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[#11111a] flex items-center justify-center border border-[#1a1a2e] flex-shrink-0">
+                      <stat.icon className={cn("w-3 h-3 sm:w-4 sm:h-4", stat.color)} />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[8px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest mb-0.5">{stat.label}</div>
-                      <div className={cn("text-base sm:text-lg font-black tracking-tight truncate", stat.color)}>{stat.value}</div>
+                      <div className="text-[7px] sm:text-[9px] text-gray-600 uppercase">{stat.label}</div>
+                      <div className={cn("text-xs sm:text-sm font-bold truncate", stat.color)}>{stat.value}</div>
                     </div>
                   </div>
                 ))}
@@ -1052,30 +1012,22 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
                 <h3 className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Security Protocol</h3>
                 <Shield className="w-4 h-4 text-cyan-500" />
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-500 font-bold uppercase">Contract Status</span>
-                  <span className="text-green-400 font-black">VERIFIED</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-500 font-bold uppercase">Liquidity Lock</span>
-                  <span className="text-cyan-400 font-black">100% BURNED</span>
-                </div>
-              </div>
-              <div className="pt-2">
-                <div className="bg-cyan-500/5 border border-cyan-500/10 rounded-xl p-3 flex items-start gap-3">
-                  <Info className="w-3 h-3 text-cyan-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-[9px] text-cyan-400/80 leading-relaxed font-bold uppercase tracking-wide">
-                    {REWARDS_MESSAGE}
-                  </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-gray-500 font-bold uppercase">Contract Status</span>
+                    <span className="text-green-400 font-black">VERIFIED</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-gray-500 font-bold uppercase">Liquidity Lock</span>
+                    <span className="text-cyan-400 font-black">100% BURNED</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </aside>
+            </aside>
         </div>
       </main>
 
-      <footer className="mt-12 border-t border-[#1a1a2e] bg-[#0a0a0f] px-6 lg:px-10 py-12">
+      <footer className="mt-12 border-t border-[#1a1a2e] bg-[#0a0a0f] px-6 lg:px-10 py-12 w-full">
           <div className="max-w-[1920px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
               <div className="space-y-6">
                 <div className="flex items-center gap-3">

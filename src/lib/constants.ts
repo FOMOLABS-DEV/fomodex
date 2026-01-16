@@ -24,5 +24,4 @@ export const DEX_NAME = 'FOMODEX'
 export const DEX_CA = 'FOMODEX...placeholder'
 
 export const BURN_NOTICE = 'We will burn 100k tokens in every listing'
-export const REWARDS_MESSAGE = 'Good rewards in next project – hope to hit good volume.'
 export const METEORA_LAUNCH = 'Launching at Meteora'
