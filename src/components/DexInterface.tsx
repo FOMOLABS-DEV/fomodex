@@ -847,9 +847,9 @@ export function DexInterface() {
                           <div className="text-[8px] sm:text-[10px] text-gray-600 font-bold uppercase tracking-tighter truncate">{token.name}</div>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="font-mono text-[9px] sm:text-[10px] font-bold text-gray-300">{(token.price / (solPrice || 1)).toFixed(6)}</div>
-                        <div className={cn(
+                        <div className="text-right flex-shrink-0">
+                          <div className="font-mono text-[9px] sm:text-[10px] font-bold text-gray-300">${token.price < 0.01 ? token.price.toFixed(6) : token.price.toFixed(2)}</div>
+                          <div className={cn(
                           "text-[9px] sm:text-[10px] font-bold",
                           token.priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'
                         )}>
@@ -886,9 +886,9 @@ export function DexInterface() {
                           </div>
                         </div>
 
-                        <div className="flex flex-col items-end bg-[#11111a] border border-[#1a1a2e] rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
-                          <div className="text-[7px] sm:text-[9px] text-gray-600 uppercase">Price (SOL)</div>
-                          <div className="text-sm sm:text-base lg:text-lg font-black font-mono text-cyan-400">{(selectedToken.price / (solPrice || 1)).toFixed(6)}</div>
+                          <div className="flex flex-col items-end bg-[#11111a] border border-[#1a1a2e] rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
+                            <div className="text-[7px] sm:text-[9px] text-gray-600 uppercase">Price (USDT)</div>
+                            <div className="text-sm sm:text-base lg:text-lg font-black font-mono text-cyan-400">${selectedToken.price < 0.01 ? selectedToken.price.toFixed(6) : selectedToken.price.toFixed(2)}</div>
                           <div className={cn(
                             "text-[9px] sm:text-xs font-mono",
                             selectedToken.priceChange24h >= 0 ? 'text-green-400' : 'text-red-400'
