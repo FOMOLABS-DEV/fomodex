@@ -573,23 +573,29 @@ export function DexInterface() {
             const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${chunk.join(',')}`)
             const data = await response.json()
             
-            if (data.pairs) {
-              const tokenPairs: Record<string, any[]> = {}
-              data.pairs.forEach((pair: any) => {
-                const mint = pair.baseToken.address
-                if (!tokenPairs[mint]) tokenPairs[mint] = []
-                tokenPairs[mint].push(pair)
-              })
+              if (data.pairs) {
+                const tokenPairs: Record<string, any[]> = {}
+                data.pairs.forEach((pair: any) => {
+                  const baseMint = pair.baseToken.address
+                  const quoteMint = pair.quoteToken.address
+                  if (!tokenPairs[baseMint]) tokenPairs[baseMint] = []
+                  tokenPairs[baseMint].push({ ...pair, isBase: true })
+                  if (!tokenPairs[quoteMint]) tokenPairs[quoteMint] = []
+                  tokenPairs[quoteMint].push({ ...pair, isBase: false })
+                })
 
-              for (const mint of chunk) {
-                const pairs = tokenPairs[mint] || []
-                if (pairs.length > 0) {
-                  const preferredPair = pairs.find((p: any) =>
-                    (p.quoteToken.address === SOL_MINT) &&
-                    p.chainId === 'solana' &&
-                    p.priceUsd &&
-                    parseFloat(String(p.volume?.h24 || 0)) > 0
-                  ) || pairs.find((p: any) => p.chainId === 'solana' && p.priceUsd) || pairs[0]
+                for (const mint of chunk) {
+                  const pairs = tokenPairs[mint] || []
+                  if (pairs.length > 0) {
+                    const basePairs = pairs.filter((p: any) => p.isBase)
+                    const quotePairs = pairs.filter((p: any) => !p.isBase)
+                    
+                    const preferredPair = basePairs.find((p: any) =>
+                      (p.quoteToken.address === SOL_MINT) &&
+                      p.chainId === 'solana' &&
+                      p.priceUsd &&
+                      parseFloat(String(p.volume?.h24 || 0)) > 0
+                    ) || basePairs.find((p: any) => p.chainId === 'solana' && p.priceUsd) || basePairs[0]
 
                     if (preferredPair) {
                       const customInfo = customTokens.find(ct => ct.mint_address === preferredPair.baseToken.address)
@@ -612,34 +618,89 @@ export function DexInterface() {
                         website: customInfo?.website || preferredPair.info?.websites?.[0]?.url || null,
                         fdv: preferredPair.fdv,
                       } as TokenData)
+                    } else if (quotePairs.length > 0) {
+                      const quotePair = quotePairs.find((p: any) => p.chainId === 'solana' && p.priceUsd) || quotePairs[0]
+                      if (quotePair && quotePair.priceUsd) {
+                        const customInfo = customTokens.find(ct => ct.mint_address === mint)
+                        foundMints.add(mint)
+                        const quoteToken = quotePair.quoteToken
+                        allTokens.push({
+                          address: mint,
+                          name: customInfo?.name || quoteToken.name,
+                          symbol: customInfo?.symbol || quoteToken.symbol,
+                          price: parseFloat(quotePair.priceUsd) / (parseFloat(quotePair.priceNative) || 1),
+                          priceChange24h: -(parseFloat(quotePair.priceChange?.h24 || 0)),
+                          volume24h: parseFloat(quotePair.volume?.h24 || 0),
+                          liquidity: parseFloat(quotePair.liquidity?.usd || 0),
+                          decimals: 9,
+                          logoURI: customInfo?.logo_uri || null,
+                          pairAddress: quotePair.pairAddress,
+                          description: customInfo?.description || null,
+                          twitter: customInfo?.twitter || null,
+                          telegram: customInfo?.telegram || null,
+                          website: customInfo?.website || null,
+                          fdv: quotePair.fdv,
+                        } as TokenData)
+                      }
                     }
+                  }
                 }
               }
-            }
           } catch (e) {
             console.error('Error fetching chunk:', e)
           }
         }
         
-        for (const ct of customTokens) {
-          if (!foundMints.has(ct.mint_address)) {
-            allTokens.push({
-              address: ct.mint_address,
-              name: ct.name,
-              symbol: ct.symbol,
-              price: 0,
-              priceChange24h: 0,
-              volume24h: 0,
-              liquidity: 0,
-              decimals: ct.decimals || 9,
-              logoURI: ct.logo_uri,
-              description: ct.description,
-              twitter: ct.twitter,
-              telegram: ct.telegram,
-              website: ct.website,
-            })
+          for (const ct of customTokens) {
+            if (!foundMints.has(ct.mint_address)) {
+              try {
+                const singleResponse = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${ct.mint_address}`)
+                const singleData = await singleResponse.json()
+                if (singleData.pairs && singleData.pairs.length > 0) {
+                  const pair = singleData.pairs.find((p: any) => p.chainId === 'solana') || singleData.pairs[0]
+                  if (pair && pair.priceUsd) {
+                    foundMints.add(ct.mint_address)
+                    allTokens.push({
+                      address: ct.mint_address,
+                      name: ct.name,
+                      symbol: ct.symbol,
+                      price: parseFloat(pair.priceUsd),
+                      priceChange24h: parseFloat(pair.priceChange?.h24 || 0),
+                      volume24h: parseFloat(pair.volume?.h24 || 0),
+                      liquidity: parseFloat(pair.liquidity?.usd || 0),
+                      decimals: ct.decimals || 9,
+                      logoURI: ct.logo_uri || pair.info?.imageUrl || null,
+                      pairAddress: pair.pairAddress,
+                      description: ct.description,
+                      twitter: ct.twitter,
+                      telegram: ct.telegram,
+                      website: ct.website,
+                      fdv: pair.fdv,
+                    })
+                    continue
+                  }
+                }
+              } catch (e) {
+                console.error('Error fetching single token:', e)
+              }
+              
+              allTokens.push({
+                address: ct.mint_address,
+                name: ct.name,
+                symbol: ct.symbol,
+                price: 0,
+                priceChange24h: 0,
+                volume24h: 0,
+                liquidity: 0,
+                decimals: ct.decimals || 9,
+                logoURI: ct.logo_uri,
+                description: ct.description,
+                twitter: ct.twitter,
+                telegram: ct.telegram,
+                website: ct.website,
+              })
+            }
           }
-        }
         
         const uniqueTokens = allTokens
           .filter((t, i, self) => self.findIndex(x => x.address === t.address) === i)
