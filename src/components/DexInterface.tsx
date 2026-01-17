@@ -474,7 +474,7 @@ function TradingPanel({ selectedToken, solPrice, isWalletConnected, onConnectWal
   )
 }
 
-export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
+export function DexInterface() {
   const [tokens, setTokens] = useState<TokenData[]>([])
   const [trendingTokens, setTrendingTokens] = useState<TokenData[]>([])
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null)
@@ -754,10 +754,7 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                <button onClick={onOpenAdmin} className="w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center bg-[#11111a] border border-[#1a1a2e] rounded-lg text-gray-400 hover:text-cyan-400 transition-all">
-                  <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                </button>
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                 <button
                   onClick={handleConnectWallet}
                   className="flex items-center gap-1.5 px-2 sm:px-4 py-1.5 sm:py-2 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-lg transition-all text-[10px] sm:text-sm whitespace-nowrap"
