@@ -446,12 +446,11 @@ function TradingPanel({ selectedToken, solPrice, isWalletConnected, onConnectWal
         <button
           onClick={handleSwap}
           disabled={!inputAmount || isFetchingQuote || isSwapping || (isWalletConnected && parseFloat(inputAmount) > inputBalance)}
-          className={cn(
-            "w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg",
-            side === 'buy' 
-              ? 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/10' 
-              : 'bg-red-500 hover:bg-red-400 text-white shadow-red-500/10'
-          )}
+            className={cn(
+              "w-full py-3 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg",
+              "bg-cyan-500 hover:bg-cyan-400 text-black"
+            )}
+
         >
           {!isWalletConnected ? (
             <>
@@ -1066,12 +1065,12 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
                   Indexing {tokens.length} assets with real-time liquidity tracking.
                 </p>
               </div>
-              <button 
-                onClick={() => setIsListingModalOpen(true)}
-                className="mt-6 w-full py-3 bg-white text-black font-black rounded-xl hover:bg-cyan-500 transition-all text-xs uppercase tracking-[0.1em]"
-              >
-                Integrate Asset
-              </button>
+                <button 
+                  onClick={() => setIsListingModalOpen(true)}
+                  className="mt-6 w-full py-3 bg-cyan-500 text-black font-black rounded-xl hover:bg-cyan-400 transition-all text-xs uppercase tracking-[0.1em]"
+                >
+                  Integrate Asset
+                </button>
             </div>
           </div>
           <div className="max-w-[1920px] mx-auto mt-12 pt-8 border-t border-[#1a1a2e] flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-black text-gray-700 uppercase tracking-widest">

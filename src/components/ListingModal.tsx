@@ -186,7 +186,7 @@ export function ListingModal({ isOpen, onClose }: ListingModalProps) {
                     </div>
                     <button
                       onClick={() => setStep(2)}
-                      className="w-full py-3.5 sm:py-4 bg-white text-black font-black rounded-xl sm:rounded-2xl hover:bg-cyan-500 transition-all text-sm"
+                      className="w-full py-3.5 sm:py-4 bg-cyan-500 text-black font-black rounded-xl sm:rounded-2xl hover:bg-cyan-400 transition-all text-sm"
                     >
                       CONTINUE TO SOCIALS
                     </button>
