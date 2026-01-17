@@ -551,7 +551,7 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
     return () => clearInterval(interval)
   }, [])
 
-    useEffect(() => {
+      useEffect(() => {
     const loadTokens = async () => {
       try {
         setLoading(true)
@@ -560,13 +560,13 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
           ...customTokens.map(t => t.mint_address)
         ]
         
-        // Use bulk API (supports up to 30 addresses)
         const chunks = []
         for (let i = 0; i < allMints.length; i += 30) {
           chunks.push(allMints.slice(i, i + 30))
         }
 
         const allTokens: TokenData[] = []
+        const foundMints = new Set<string>()
         
         for (const chunk of chunks) {
           try {
@@ -574,7 +574,6 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
             const data = await response.json()
             
             if (data.pairs) {
-              // Group pairs by token address
               const tokenPairs: Record<string, any[]> = {}
               data.pairs.forEach((pair: any) => {
                 const mint = pair.baseToken.address
@@ -594,6 +593,7 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
 
                     if (preferredPair) {
                       const customInfo = customTokens.find(ct => ct.mint_address === preferredPair.baseToken.address)
+                      foundMints.add(preferredPair.baseToken.address)
                       
                       allTokens.push({
                         address: preferredPair.baseToken.address,
@@ -618,6 +618,26 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
             }
           } catch (e) {
             console.error('Error fetching chunk:', e)
+          }
+        }
+        
+        for (const ct of customTokens) {
+          if (!foundMints.has(ct.mint_address)) {
+            allTokens.push({
+              address: ct.mint_address,
+              name: ct.name,
+              symbol: ct.symbol,
+              price: 0,
+              priceChange24h: 0,
+              volume24h: 0,
+              liquidity: 0,
+              decimals: ct.decimals || 9,
+              logoURI: ct.logo_uri,
+              description: ct.description,
+              twitter: ct.twitter,
+              telegram: ct.telegram,
+              website: ct.website,
+            })
           }
         }
         
@@ -674,10 +694,16 @@ export function DexInterface({ onOpenAdmin }: { onOpenAdmin: () => void }) {
           <div className="bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-[#1a1a2e] px-2 sm:px-4 py-2 overflow-hidden">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 sm:gap-4 overflow-hidden min-w-0">
-                <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[8px] sm:text-[10px] font-bold text-cyan-400 uppercase tracking-wider animate-pulse flex-shrink-0">
-                  <Rocket className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  <span className="whitespace-nowrap truncate">{METEORA_LAUNCH}</span>
-                </div>
+                <button
+                    onClick={() => {
+                      navigator.clipboard.writeText('DSEUEGxgDizLLLrVXmCqyAwD9GScpBsoH7HLmMYqfomo')
+                    }}
+                    className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-[8px] sm:text-[10px] font-bold text-cyan-400 uppercase tracking-wider animate-pulse flex-shrink-0 hover:bg-cyan-500/20 transition-all cursor-pointer"
+                  >
+                    <Rocket className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    <span className="whitespace-nowrap truncate">CA: DSEUEGxgDiz...fomo</span>
+                    <Copy className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  </button>
                 <div className="hidden xs:flex items-center gap-1.5 sm:gap-2 text-[8px] sm:text-[10px] font-bold text-red-400 uppercase tracking-wider flex-shrink-0">
                   <Flame className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   <span className="whitespace-nowrap">{BURN_NOTICE}</span>

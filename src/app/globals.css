@@ -213,11 +213,7 @@ nextjs-portal {
 }
 
 .wallet-adapter-modal-list li img {
-  /* filter: grayscale(1) brightness(2); */
-}
-
-.wallet-adapter-modal-list li:hover img {
-  filter: none;
+  filter: none !important;
 }
 
 @keyframes glow-pulse {
