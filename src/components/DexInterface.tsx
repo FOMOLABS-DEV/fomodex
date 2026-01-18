@@ -816,7 +816,7 @@ export function DexInterface() {
                   </Link>
                     <Link 
                       href="/governance"
-                      className="hidden sm:inline px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm font-bold text-gray-500 hover:text-cyan-400 whitespace-nowrap transition-colors"
+                      className="px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm font-bold text-gray-500 hover:text-cyan-400 whitespace-nowrap transition-colors"
                     >
                       Governance
                     </Link>
@@ -1140,7 +1140,7 @@ export function DexInterface() {
               <ul className="space-y-3 text-[10px] text-gray-600 font-black uppercase tracking-widest">
                 <li><Link href="/whitepaper" className="hover:text-cyan-400 cursor-pointer transition-colors">Whitepaper</Link></li>
                 <li onClick={() => setIsListingModalOpen(true)} className="hover:text-cyan-400 cursor-pointer transition-colors">Apply Listing</li>
-                  <li><span className="text-gray-700 cursor-not-allowed" title="Coming Soon">Governance (Soon)</span></li>
+                  <li><Link href="/governance" className="hover:text-cyan-400 cursor-pointer transition-colors">Governance</Link></li>
               </ul>
             </div>
               <div className="space-y-6">
