@@ -489,6 +489,7 @@ export function DexInterface() {
   const [tokenTab, setTokenTab] = useState<'price' | 'info'>('price')
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
+  const initialLoadDone = useRef(false)
 
   const { publicKey, connected, disconnect } = useWallet()
   const { setVisible } = useWalletModal()
@@ -711,11 +712,15 @@ export function DexInterface() {
         const topGainers = [...uniqueTokens]
           .sort((a, b) => b.priceChange24h - a.priceChange24h)
           .slice(0, 8)
-        setTrendingTokens(topGainers)
-        
-        if (!selectedToken || !uniqueTokens.some(t => t.address === selectedToken.address)) {
-          setSelectedToken(uniqueTokens[0] || null)
-        }
+          setTrendingTokens(topGainers)
+          
+          if (!initialLoadDone.current) {
+            const fomoToken = uniqueTokens.find(t => t.symbol === 'FOMO')
+            setSelectedToken(fomoToken || uniqueTokens[0] || null)
+            initialLoadDone.current = true
+          } else if (!selectedToken || !uniqueTokens.some(t => t.address === selectedToken.address)) {
+            setSelectedToken(uniqueTokens[0] || null)
+          }
       } catch (error) {
         console.error('Error loading tokens:', error)
       } finally {
@@ -809,9 +814,12 @@ export function DexInterface() {
                   >
                     Docs
                   </Link>
-                  <span className="hidden sm:inline px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm font-bold text-gray-700/50 whitespace-nowrap">
-                    Governance
-                  </span>
+                    <Link 
+                      href="/governance"
+                      className="hidden sm:inline px-2 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-sm font-bold text-gray-500 hover:text-cyan-400 whitespace-nowrap transition-colors"
+                    >
+                      Governance
+                    </Link>
                 </div>
               </div>
 

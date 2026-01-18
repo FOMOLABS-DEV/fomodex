@@ -55,9 +55,11 @@ export interface Proposal {
   votes_for: number
   votes_against: number
   total_votes: number
+  start_date: string | null
   end_date: string
   author: string
   category: string
+  creator_wallet: string | null
   created_at: string
 }
 
@@ -176,16 +178,15 @@ export async function getTransactionHistory(walletAddress: string, limit = 50): 
   return data || []
 }
 
-export async function createProposal(proposal: Omit<Proposal, 'id' | 'created_at' | 'votes_for' | 'votes_against' | 'total_votes' | 'status'>): Promise<Proposal | null> {
+export async function createProposal(proposal: Omit<Proposal, 'id' | 'created_at' | 'votes_for' | 'votes_against' | 'total_votes' | 'status'> & { creator_wallet: string }): Promise<Proposal | null> {
   const { data, error } = await supabase
     .from('proposals')
     .insert([{
       ...proposal,
-      status: 'pending',
+      status: 'active',
       votes_for: 0,
       votes_against: 0,
-      total_votes: 0,
-      end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      total_votes: 0
     }])
     .select()
     .single()
@@ -212,7 +213,108 @@ export async function getProposals(): Promise<Proposal[]> {
   return data || []
 }
 
-export async function voteProposal(proposalId: string, choice: 'for' | 'against'): Promise<boolean> {
+export interface Vote {
+  id: number
+  proposal_id: string
+  wallet_address: string
+  vote_type: 'for' | 'against'
+  amount: number
+  created_at: string
+}
+
+export async function checkUserVote(proposalId: string, walletAddress: string): Promise<Vote | null> {
+  const { data, error } = await supabase
+    .from('votes')
+    .select('*')
+    .eq('proposal_id', proposalId)
+    .eq('wallet_address', walletAddress)
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  return data
+}
+
+export async function getUserVotesToday(proposalId: string, walletAddress: string): Promise<number> {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  
+  const { data, error } = await supabase
+    .from('votes')
+    .select('id')
+    .eq('proposal_id', proposalId)
+    .eq('wallet_address', walletAddress)
+    .gte('created_at', today.toISOString())
+  
+  if (error) {
+    console.error('Error checking votes today:', error)
+    return 0
+  }
+  
+  return data?.length || 0
+}
+
+export async function getUserVotesForProposal(proposalId: string, walletAddress: string): Promise<Vote[]> {
+  const { data, error } = await supabase
+    .from('votes')
+    .select('*')
+    .eq('proposal_id', proposalId)
+    .eq('wallet_address', walletAddress)
+  
+  if (error) {
+    console.error('Error fetching user votes for proposal:', error)
+    return []
+  }
+  
+  return data || []
+}
+
+export const MAX_VOTES_PER_DAY = 5
+export const BURN_AMOUNT = 10000
+export const CREATOR_REWARD = 10000
+export const TOTAL_VOTE_COST = BURN_AMOUNT + CREATOR_REWARD
+export const BURN_ADDRESS = '1nc1nerator11111111111111111111111111111111'
+export const PROPOSAL_COST = 100000
+export const MAX_PROPOSAL_DAYS = 30
+
+export async function getProposalCreator(proposalId: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('proposals')
+    .select('creator_wallet')
+    .eq('id', proposalId)
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  return data.creator_wallet
+}
+
+export async function voteProposal(proposalId: string, choice: 'for' | 'against', walletAddress: string, txSignature: string, creatorTxSignature: string): Promise<{ success: boolean; error?: string }> {
+  const votesToday = await getUserVotesToday(proposalId, walletAddress)
+  if (votesToday >= MAX_VOTES_PER_DAY) {
+    return { success: false, error: `You have reached the maximum of ${MAX_VOTES_PER_DAY} votes per day on this proposal` }
+  }
+
+  const { error: voteError } = await supabase
+    .from('votes')
+    .insert([{
+      proposal_id: proposalId,
+      wallet_address: walletAddress,
+      vote_type: choice,
+      amount: TOTAL_VOTE_COST,
+      tx_signature: txSignature,
+      creator_tx_signature: creatorTxSignature
+    }])
+
+  if (voteError) {
+    console.error('Error recording vote:', voteError)
+    return { success: false, error: 'Failed to record vote' }
+  }
+
   const { data: proposal, error: fetchError } = await supabase
     .from('proposals')
     .select('votes_for, votes_against, total_votes')
@@ -221,13 +323,13 @@ export async function voteProposal(proposalId: string, choice: 'for' | 'against'
 
   if (fetchError || !proposal) {
     console.error('Error fetching proposal for voting:', fetchError)
-    return false
+    return { success: false, error: 'Proposal not found' }
   }
 
   const updates = {
     votes_for: choice === 'for' ? Number(proposal.votes_for) + 1 : proposal.votes_for,
     votes_against: choice === 'against' ? Number(proposal.votes_against) + 1 : proposal.votes_against,
-    total_votes: Number(proposal.total_votes) + 1
+    total_votes: Number(proposal.total_votes) + BURN_AMOUNT
   }
 
   const { error: updateError } = await supabase
@@ -237,8 +339,22 @@ export async function voteProposal(proposalId: string, choice: 'for' | 'against'
 
   if (updateError) {
     console.error('Error updating proposal votes:', updateError)
-    return false
+    return { success: false, error: 'Failed to update vote count' }
   }
 
-  return true
+  return { success: true }
+}
+
+export async function getUserVotes(walletAddress: string): Promise<Vote[]> {
+  const { data, error } = await supabase
+    .from('votes')
+    .select('*')
+    .eq('wallet_address', walletAddress)
+
+  if (error) {
+    console.error('Error fetching user votes:', error)
+    return []
+  }
+
+  return data || []
 }
