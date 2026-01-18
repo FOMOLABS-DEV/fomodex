@@ -44,14 +44,14 @@ export default function GovernancePage() {
   }, [])
 
   useEffect(() => {
-    if (connected && publicKey && connection) {
+    if (connected && publicKey && connection && proposals.length > 0) {
       loadUserData()
-    } else {
+    } else if (!connected || !publicKey) {
       setUserVotes([])
       setFomoBalance(0)
       setUserVotesTodayMap({})
     }
-  }, [connected, publicKey, connection])
+  }, [connected, publicKey, connection, proposals])
 
   async function loadProposals() {
     setLoading(true)
