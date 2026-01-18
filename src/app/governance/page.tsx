@@ -35,6 +35,7 @@ export default function GovernancePage() {
     startDate: '',
     endDate: ''
   })
+  const [totalBurned, setTotalBurned] = useState<number>(0)
 
   const isWalletConnected = connected && !!publicKey
   const walletAddress = publicKey ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}` : ''
@@ -57,6 +58,8 @@ export default function GovernancePage() {
     setLoading(true)
     const data = await getProposals()
     setProposals(data)
+    const total = data.reduce((sum, p) => sum + (p.total_votes || 0), 0)
+    setTotalBurned(total)
     setLoading(false)
   }
 
@@ -390,9 +393,13 @@ export default function GovernancePage() {
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight">
               <span className="text-cyan-400 italic">Governance</span> Portal
             </h1>
-            <p className="text-gray-400 text-xs sm:text-sm max-w-2xl mx-auto px-2">
-              Shape the future of FOMODEX. Vote on proposals with your FOMO tokens. Each vote costs {TOTAL_VOTE_COST.toLocaleString()} FOMO ({BURN_AMOUNT.toLocaleString()} burned + {CREATOR_REWARD.toLocaleString()} to creator). Max {MAX_VOTES_PER_DAY}/day per proposal.
-            </p>
+<p className="text-gray-400 text-xs sm:text-sm max-w-2xl mx-auto px-2">
+                Shape the future of FOMODEX. Vote on proposals with your FOMO tokens. Each vote costs {TOTAL_VOTE_COST.toLocaleString()} FOMO ({BURN_AMOUNT.toLocaleString()} burned + {CREATOR_REWARD.toLocaleString()} to creator). Max {MAX_VOTES_PER_DAY}/day per proposal.
+              </p>
+              <div className="flex items-center justify-center gap-2 mt-3">
+                <Flame className="w-4 h-4 text-orange-500" />
+                <span className="text-orange-400 font-bold text-sm">{totalBurned.toLocaleString()} FOMO Total Burned</span>
+              </div>
           </div>
 
           {connected && (
